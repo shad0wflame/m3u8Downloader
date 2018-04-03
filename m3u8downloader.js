@@ -47,6 +47,7 @@ function pipeChunks(urls) {
     const req = request(url.href, res => {
 
         res.on('data', (chunk) => {
+            // TODO: Implement decryption.
             dStream.write(chunk);
         });
 
