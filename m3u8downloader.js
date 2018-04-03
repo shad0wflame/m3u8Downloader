@@ -1,15 +1,18 @@
 const { request }  = require('https');
 const EventEmitter = require('events');
+const M3U8Parser = require('./parser');
 const DuplexStream = require('./duplex-stream');
 
 let _private = new WeakMap();
 
 class M3U8Downloader {
 
-    constructor(urls) {
+    constructor(url) {
+
+        this.parser = new M3U8Parser(url);
 
         /** { Array<URL> } urls **/
-        this.urls = [...urls];
+        //this.urls = [...url];
 
         _private.set(this, {
             /** @private { DuplexStream } _dStream **/
@@ -22,7 +25,7 @@ class M3U8Downloader {
             _pipeChunks: pipeChunks
         });
 
-        _private.get(this)._pipeChunks.call(this, urls);
+        //_private.get(this)._pipeChunks.call(this, urls);
     }
 
     on(event, cb) {
