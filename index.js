@@ -1,9 +1,8 @@
-const { URL } = require('url');
 const fs = require('fs');
 const { twitter, animeid, crunchyroll } = require('./examples');
 const M3U8Downloader = require('./m3u8downloader.js');
 
-let downloader = new M3U8Downloader(crunchyroll);
+let downloader = new M3U8Downloader(twitter);
 
 // Event driven
 

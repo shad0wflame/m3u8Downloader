@@ -1,3 +1,7 @@
+const { URL } = require('url');
+
+let examples = {};
+
 examples.twitter = [
     new URL('https://video.twimg.com/ext_tw_video/977753441849126913/pu/vid/0/3000/640x360/uJcyJIETVhCYFsao.ts'),
     new URL('https://video.twimg.com/ext_tw_video/977753441849126913/pu/vid/3000/6000/640x360/3PDacLEVn85c0RUE.ts'),
