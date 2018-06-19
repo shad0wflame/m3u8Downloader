@@ -22,6 +22,8 @@ class DuplexStream extends Duplex {
 
     _write(chunk, encoding, callback) {
         process.nextTick(() => {
+            // TODO: Set max size to body and buffer.
+            // TODO: Upon reaching size limit, delete the oldest chunks.
             this.body.push(chunk);
             _private.get(this)._buffer.push(chunk);
             callback();
