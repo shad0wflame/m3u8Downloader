@@ -1,7 +1,7 @@
 const { request }  = require('https');
 const EventEmitter = require('events');
 const M3U8Parser = require('./parser');
-const DuplexStream = require('./duplex-stream');
+const PassthroughStream = require('./passthrough-stream');
 
 let _private = new WeakMap();
 
@@ -12,11 +12,11 @@ class M3U8Downloader {
         this.parser = new M3U8Parser(url);
 
         /** { Array<URL> } urls **/
-        //this.urls = [...url];
+        this.urls = [];
 
         _private.set(this, {
-            /** @private { DuplexStream } _dStream **/
-            _dStream: new DuplexStream(),
+            /** @private { DuplexStream } _pStream **/
+            _pStream: new PassthroughStream(),
 
             /** @private { EventEmitter } _eventEmitter **/
             _eventEmitter: new EventEmitter(),
@@ -25,7 +25,11 @@ class M3U8Downloader {
             _pipeChunks: pipeChunks
         });
 
-        //_private.get(this)._pipeChunks.call(this, urls);
+        this.parser.on('finish', (file) => {
+            this.urls = [...file.segments];
+            _private.get(this)._pipeChunks.call(this, file.segments);
+        });
+
     }
 
     on(event, cb) {
@@ -33,7 +37,7 @@ class M3U8Downloader {
     }
 
     pipe(stream) {
-        _private.get(this)._dStream.pipe(stream);
+        _private.get(this)._pStream.pipe(stream);
     }
 }
 
@@ -46,22 +50,21 @@ class M3U8Downloader {
  */
 function pipeChunks(urls) {
     const url = urls.shift();
-    const dStream = _private.get(this)._dStream;
-    const req = request(url.href, res => {
+    const pStream = _private.get(this)._pStream;
+    const req = request(url.href);
 
-        res.on('data', (chunk) => {
-            // TODO: Implement decryption.
-            dStream.write(chunk);
-        });
-
+    console.log(`${this.urls.length - urls.length} / ${this.urls.length} complete`);
+    req.on('response', (res) => {
+        res.pipe(pStream, {end: false});
         res.on('end', () => {
-            console.log(`${this.urls.length - urls.length} / ${this.urls.length} complete`);
             if(urls.length > 0){
                 _private.get(this)._pipeChunks.call(this, urls);
             } else {
-                console.log('Done!');
-                dStream.end(null, null, dStream.stop());
-                _private.get(this)._eventEmitter.emit('finish', Buffer.concat(dStream.body));
+                pStream.end(null, null, () => {
+                    console.log('Done!');
+                    _private.get(this)._eventEmitter.emit('finish', Buffer.concat(pStream.body))
+                });
+
             }
         });
     });
